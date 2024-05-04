@@ -16,16 +16,16 @@ using namespace std;
 
 // Retrieve player stats including PvP and PvE, and ensure correct total games count
 // Retrieve player stats, ensuring proper handling of both PvP and PvE stats
-bool getPlayerStats(sqlite3* db, const std::string& email,
+bool getPlayerStats(sqlite3* db, const string& email,
     int& pvp_win_count, int& pvp_lose_count, int& pvp_total_games,
     int& pve_win_count, int& pve_lose_count, int& pve_total_games) {
-    std::string sql = "SELECT pvp_win_count, pvp_lose_count, pvp_total_games, "
+    string sql = "SELECT pvp_win_count, pvp_lose_count, pvp_total_games, "
         "pve_win_count, pve_lose_count, pve_total_games "
         "FROM players WHERE email='" + email + "';";
     sqlite3_stmt* stmt;
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Error preparing SQL query: " << sqlite3_errmsg(db) << std::endl;
+        cerr << "Error preparing SQL query: " << sqlite3_errmsg(db) << endl;
         return false;
     }
 
@@ -41,7 +41,7 @@ bool getPlayerStats(sqlite3* db, const std::string& email,
     }
 
     if (!recordFound) { // If no record is found, raise a warning
-        std::cerr << "No record found for email: " << email << std::endl;
+        cerr << "No record found for email: " << email << endl;
         pvp_win_count = 0;
         pvp_lose_count = 0;
         pvp_total_games = 0;
@@ -55,55 +55,55 @@ bool getPlayerStats(sqlite3* db, const std::string& email,
 }
 
 // Update player stats, ensuring proper total games count
-void updatePlayerStats(sqlite3* db, const std::string& email,
+void updatePlayerStats(sqlite3* db, const string& email,
     int pvp_win_count, int pvp_lose_count, int pvp_total_games,
     int pve_win_count, int pve_lose_count, int pve_total_games) {
     if (db == nullptr) {
-        std::cerr << "Database connection is not established." << std::endl;
+        cerr << "Database connection is not established." << endl;
         return;
     }
 
     // Calculate total games as the sum of PvP and PvE total games
     int total_games = pvp_total_games + pve_total_games;
 
-    std::string updateSQL =
+    string updateSQL =
         "UPDATE players SET "
-        "pvp_win_count = " + std::to_string(pvp_win_count) +
-        ", pvp_lose_count = " + std::to_string(pvp_lose_count) +
-        ", pvp_total_games = " + std::to_string(pvp_total_games) +
-        ", pve_win_count = " + std::to_string(pve_win_count) +
-        ", pve_lose_count = " + std::to_string(pve_lose_count) +
-        ", pve_total_games = " + std::to_string(pve_total_games) +
-        ", total_games = " + std::to_string(total_games) +
+        "pvp_win_count = " + to_string(pvp_win_count) +
+        ", pvp_lose_count = " + to_string(pvp_lose_count) +
+        ", pvp_total_games = " + to_string(pvp_total_games) +
+        ", pve_win_count = " + to_string(pve_win_count) +
+        ", pve_lose_count = " + to_string(pve_lose_count) +
+        ", pve_total_games = " + to_string(pve_total_games) +
+        ", total_games = " + to_string(total_games) +
         " WHERE email = '" + email + "';";
 
     char* errMsg = nullptr;
     int status = sqlite3_exec(db, updateSQL.c_str(), nullptr, nullptr, &errMsg);
 
     if (status != SQLITE_OK) {
-        std::cerr << "Error updating player stats: " << errMsg << std::endl;
+        cerr << "Error updating player stats: " << errMsg << endl;
         sqlite3_free(errMsg);
     }
     else {
-        std::cout << "Player stats updated successfully for " << email << std::endl;
+        cout << "Player stats updated successfully for " << email << endl;
     }
 }
-void handleGameOutcome(sqlite3* db, const std::string& player1Email,
-    const std::string& player2Email, int game_result, int gameMode) {
+void handleGameOutcome(sqlite3* db, const string& player1Email,
+    const string& player2Email, int game_result, int gameMode) {
     int pvp_win_count_1, pvp_lose_count_1, pvp_total_games_1;
     int pvp_win_count_2, pvp_lose_count_2, pvp_total_games_2;
     int pve_win_count, pve_lose_count, pve_total_games;
 
     // Retrieve existing stats for Player 1
     if (!getPlayerStats(db, player1Email, pvp_win_count_1, pvp_lose_count_1, pvp_total_games_1, pve_win_count, pve_lose_count, pve_total_games)) {
-        std::cerr << "Failed to get player stats for " << player1Email << std::endl;
+        cerr << "Failed to get player stats for " << player1Email << endl;
         return;
     }
 
     if (gameMode == 1) { // Player vs. Player
         // Retrieve existing stats for Player 2
         if (!getPlayerStats(db, player2Email, pvp_win_count_2, pvp_lose_count_2, pvp_total_games_2, pve_win_count, pve_lose_count, pve_total_games)) {
-            std::cerr << "Failed to get player stats for " << player2Email << std::endl;
+            cerr << "Failed to get player stats for " << player2Email << endl;
             return;
         }
 

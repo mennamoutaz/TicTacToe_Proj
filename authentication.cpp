@@ -52,90 +52,90 @@ string getPassword() {
     cout << endl; // Move to next line
     return pass;
 }
-std::string signup(sqlite3* db) {
-    std::string email, name, password, city;
+string signup(sqlite3* db) {
+    string email, name, password, city;
     int age;
-    std::cout << "Enter email: ";
-    std::cin >> email;
-    std::cout << "Enter password: ";
+     cout << "Enter email: ";
+     cin >> email;
+     cout << "Enter password: ";
     password = hashPassword(getPassword()); // Hash the password
-    std::cout << "Enter name: ";
-    std::cin >> name;
-    std::cout << "Enter age: ";
-    std::cin >> age;
-    std::cout << "Enter city: ";
-    std::cin >> city;
+     cout << "Enter name: ";
+     cin >> name;
+     cout << "Enter age: ";
+     cin >> age;
+     cout << "Enter city: ";
+     cin >> city;
 
-    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    std::string currentDateStr = timeToString(now);
+     chrono::system_clock::time_point now =  chrono::system_clock::now();
+     string currentDateStr = timeToString(now);
 
-    std::string insertSQL = "INSERT INTO players (email, password, name, age, city, current_date) "
+     string insertSQL = "INSERT INTO players (email, password, name, age, city, current_date) "
         "VALUES ('" + email + "', '" + password + "', '" + name + "', "
-        + std::to_string(age) + ", '" + city + "', '" + currentDateStr + "')";
+        +  to_string(age) + ", '" + city + "', '" + currentDateStr + "')";
     char* errMsg = nullptr;
     int status = sqlite3_exec(db, insertSQL.c_str(), nullptr, nullptr, &errMsg);
 
     if (status != SQLITE_OK) {
-        std::cerr << "Error inserting data: " << errMsg << std::endl;
+         cerr << "Error inserting data: " << errMsg <<  endl;
         sqlite3_free(errMsg);
         return "";
     }
 
-    std::cout << "Signup successful!" << std::endl;
+     cout << "Signup successful!" <<  endl;
     return email; // Return the email upon successful signup
 }
-std::string login(sqlite3* db) {
-    std::string email, password;
-    std::cout << "Enter email: ";
-    std::cin >> email;
-    std::cout << "Enter password: ";
+ string login(sqlite3* db) {
+     string email, password;
+     cout << "Enter email: ";
+     cin >> email;
+     cout << "Enter password: ";
     password = hashPassword(getPassword());
 
-    std::string sql = "SELECT password, last_login_date FROM players WHERE email='" + email + "';";
+     string sql = "SELECT password, last_login_date FROM players WHERE email='" + email + "';";
     sqlite3_stmt* stmt;
     char* errMsg = nullptr;
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Error preparing statement: " << sqlite3_errmsg(db) << std::endl;
+         cerr << "Error preparing statement: " << sqlite3_errmsg(db) <<  endl;
         return "";
     }
 
-    std::string resultEmail = ""; // Default to empty string in case of failure
+     string resultEmail = ""; // Default to empty string in case of failure
 
     if (sqlite3_step(stmt) == SQLITE_ROW) {
         const unsigned char* dbPassword = sqlite3_column_text(stmt, 0);
-        std::string dbPasswordStr(reinterpret_cast<const char*>(dbPassword));
+         string dbPasswordStr(reinterpret_cast<const char*>(dbPassword));
 
         if (password == dbPasswordStr) { // Password matches
-            std::cout << "Login successful" << std::endl;
+             cout << "Login successful" <<  endl;
             resultEmail = email; // Set the returned email
 
             const unsigned char* lastLoginDate = sqlite3_column_text(stmt, 1);
             if (lastLoginDate != nullptr) {
-                std::cout << "Last login date: " << reinterpret_cast<const char*>(lastLoginDate) << std::endl;
+                 cout << "Last login date: " << reinterpret_cast<const char*>(lastLoginDate) <<  endl;
             }
             else {
-                std::cout << "This is your first login!" << std::endl;
+                 cout << "This is your first login!" <<  endl;
             }
 
             // Update the last login date
-            std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-            std::string lastLoginDateStr = timeToString(now);
+             chrono::system_clock::time_point now =  chrono::system_clock::now();
+             string lastLoginDateStr = timeToString(now);
 
-            std::string updateSQL = "UPDATE players SET last_login_date = '" + lastLoginDateStr + "' WHERE email = '" + email + "';";
+             string updateSQL = "UPDATE players SET last_login_date = '" + lastLoginDateStr + "' WHERE email = '" + email + "';";
             int updateStatus = sqlite3_exec(db, updateSQL.c_str(), nullptr, nullptr, &errMsg);
 
             if (updateStatus != SQLITE_OK) {
-                std::cerr << "Error updating last login date: " << errMsg << std::endl;
+                 cerr << "Error updating last login date: " << errMsg <<  endl;
                 sqlite3_free(errMsg);
             }
         }
         else {
-            std::cerr << "Incorrect password" << std::endl;
+             cerr << "Incorrect password" <<  endl;
         }
     }
     else {
-        std::cerr << "User not found" << std::endl;
+         cerr << "User not found" <<  endl;
     }
 
     sqlite3_finalize(stmt);
